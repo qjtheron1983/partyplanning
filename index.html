@@ -1333,25 +1333,37 @@ async function loadUserAvatar(uid, el) {
 
 // ══ NAVIGATION ══
 function goTo(sec) {
+  // Track previous section before switching (but not when going TO party - caller sets prevSec)
+  if (sec !== 'party') G.prevSec = document.querySelector('.sec.on')?.id?.replace('sec-','') || 'dashboard';
   document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
   document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
   const s = document.getElementById('sec-' + sec);
-  if (s) { s.classList.add('on'); G.prevSec = G.prevSec || 'dashboard'; }
+  if (s) s.classList.add('on');
   const n = document.querySelector(`.ni[data-sec="${sec}"]`);
   if (n) n.classList.add('on');
   closeSB();
-  soundClick();
+  if (sec !== 'party') soundClick(); // avoid double sound in openParty
   if (sec === 'profile') renderMyProfile();
   if (sec === 'discover') listenPublic();
 }
 
 function goBack() {
-  G.unsubs.filter((_,i) => i > 2).forEach(u => u && u()); // clean party subs
+  // Clean up party-specific listeners
+  G.unsubs.splice(3).forEach(u => u && u()); // keep first 3 (auth, parties, notifs)
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
   if (G.cdTimer) { clearInterval(G.cdTimer); G.cdTimer = null; }
   // Hide edit FAB
   const fab = document.getElementById('editFab');
   if (fab) fab.classList.remove('on');
-  goTo(G.prevSec || 'dashboard');
+  // Navigate back
+  const dest = G.prevSec || 'dashboard';
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
+  const s = document.getElementById('sec-' + dest);
+  if (s) s.classList.add('on');
+  const n = document.querySelector(`.ni[data-sec="${dest}"]`);
+  if (n) n.classList.add('on');
+  soundClick();
 }
 
 // ══ SIDEBAR ══
@@ -1407,7 +1419,7 @@ function partyCard(p, uid) {
   }).join('');
   const isPast = p.dateS && new Date(p.dateS + 'T23:59:59') < new Date();
   return `
-  <div class="pc" onclick="openParty('${p.id}')">
+  <div class="pc" onclick="openParty('${p.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openParty('${p.id}')"  style="cursor:pointer">
     <div class="pc-banner" style="background:${p.color||'linear-gradient(135deg,#7C3AED,#EC4899)'}">
       ${p.emoji||'🎉'}
       <div class="role-badge ${isOrg?'role-o':'role-g'}">${isOrg?'Organiser':'Guest'}</div>
@@ -1490,39 +1502,63 @@ function resetCreateForm() {
 
 // ══ OPEN PARTY ══
 async function openParty(id) {
+  if (!id) { toast('Invalid party ID', 'err'); return; }
   showLoad();
+  // Save where we came from BEFORE calling goTo
   G.prevSec = document.querySelector('.sec.on')?.id?.replace('sec-','') || 'dashboard';
   G.partyId = id;
+  // Reset chat listener so it restarts fresh for this party
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+
   try {
     const snap = await FB.getDoc(FB.doc(FB.db, 'parties', id));
-    if (!snap.exists()) { toast('Party not found!', 'err'); hideLoad(); return; }
+    if (!snap.exists()) { toast('Party not found! It may have been deleted.', 'err'); hideLoad(); return; }
     G.party = { id: snap.id, ...snap.data() };
     renderPartyDetail(G.party);
-    goTo('party');
+    // Switch to party section
+    document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+    document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
+    const partySection = document.getElementById('sec-party');
+    if (partySection) partySection.classList.add('on');
+    closeSB();
+    haptic('light');
     hideLoad();
 
-    // Real-time listener
-    const unsub = FB.onSnapshot(FB.doc(FB.db, 'parties', id), snap => {
-      if (snap.exists()) {
-        G.party = { id: snap.id, ...snap.data() };
+    // Real-time listener for live updates
+    const unsub = FB.onSnapshot(FB.doc(FB.db, 'parties', id), docSnap => {
+      if (docSnap.exists()) {
+        G.party = { id: docSnap.id, ...docSnap.data() };
         renderPartyTasks(G.party);
         renderAttendees(G.party);
         renderActivities(G.party);
         renderBI(G.party);
       }
+    }, err => {
+      console.error('[BASH] Party listener error:', err);
     });
     G.unsubs.push(unsub);
-  } catch(e) { hideLoad(); toast('Error: ' + e.message, 'err'); }
+  } catch(e) {
+    hideLoad();
+    console.error('[BASH] openParty error:', e);
+    toast('Could not open party: ' + e.message, 'err');
+  }
 }
 
 function renderPartyDetail(p) {
   const uid = G.user.uid;
   const isOrg = p.organiserId === uid;
 
+  // Guard: make sure elements exist (section must be visible)
+  const pdHdr   = document.getElementById('pdHdr');
+  const pdEmoji = document.getElementById('pdEmoji');
+  const pdTitle = document.getElementById('pdTitle');
+  const pdChips = document.getElementById('pdChips');
+  if (!pdHdr || !pdTitle) { console.error('[BASH] Party section elements not found'); return; }
+
   // Header
-  document.getElementById('pdHdr').style.background = p.color || 'linear-gradient(135deg,#7C3AED,#EC4899)';
-  document.getElementById('pdEmoji').textContent = p.emoji || '🎉';
-  document.getElementById('pdTitle').textContent = p.name;
+  pdHdr.style.background = p.color || 'linear-gradient(135deg,#7C3AED,#EC4899)';
+  if (pdEmoji) pdEmoji.textContent = p.emoji || '🎉';
+  pdTitle.textContent = p.name;
 
   const chips = [];
   if (p.dateS) chips.push(`<span class="chip"><i class="fa fa-calendar"></i> ${fmtDate(p.dateS)}${p.timeS?' at '+fmtTime(p.timeS):''}</span>`);
@@ -1530,18 +1566,20 @@ function renderPartyDetail(p) {
   if (p.loc) chips.push(`<span class="chip"><i class="fa fa-map-marker-alt"></i> ${p.loc}</span>`);
   if (p.dress) chips.push(`<span class="chip"><i class="fa fa-tshirt"></i> ${p.dress}</span>`);
   chips.push(`<span class="chip">${isOrg?'<i class="fa fa-crown"></i> Organiser':'<i class="fa fa-user"></i> Guest'}</span>`);
-  document.getElementById('pdChips').innerHTML = chips.join('');
+  if (pdChips) pdChips.innerHTML = chips.join('');
 
   // Countdown
   startCountdown(p.dateS, p.timeS);
 
   // Invite code
-  document.getElementById('invCode').textContent = p.inviteCode || '------';
-  document.getElementById('modalCode').textContent = p.inviteCode || '------';
+  const invCode   = document.getElementById('invCode');
+  const modalCode = document.getElementById('modalCode');
+  if (invCode)   invCode.textContent   = p.inviteCode || '------';
+  if (modalCode) modalCode.textContent = p.inviteCode || '------';
 
   // Organiser-only buttons
-  ['btnAddTask','btnAddAct'].forEach(id => {
-    const el = document.getElementById(id);
+  ['btnAddTask','btnAddAct'].forEach(btnId => {
+    const el = document.getElementById(btnId);
     if (el) el.style.display = isOrg ? '' : 'none';
   });
   // Show edit FAB for organiser
@@ -1554,10 +1592,17 @@ function renderPartyDetail(p) {
   renderPartyTasks(p);
   renderActivities(p);
   renderAttendees(p);
-  loadPhotos(id);
+  loadPhotos(p.id);  // Fix: was loadPhotos(id) — id not in scope here
   renderBI(p);
 
-  partyTab('overview', document.querySelector('.tab'));
+  // Reset all tabs then activate overview
+  // Use #partyTabs to scope correctly, not the first .tab on the page
+  document.querySelectorAll('.pt').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('#partyTabs .tab').forEach(b => b.classList.remove('on'));
+  const overviewPanel = document.getElementById('pt-overview');
+  const overviewBtn = document.querySelector('#partyTabs .tab');
+  if (overviewPanel) overviewPanel.style.display = 'block';
+  if (overviewBtn) overviewBtn.classList.add('on');
 }
 
 function renderLogistics(p) {
@@ -1942,15 +1987,19 @@ function partyTab(tab, btn) {
 // ══ CHAT ══
 let chatUnsub = null;
 function setupChat() {
-  if (chatUnsub) return; // already listening
+  // Always restart listener (chatUnsub already cleared in openParty)
+  if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+  if (!G.partyId) return;
   const q = FB.query(FB.collection(FB.db, `parties/${G.partyId}/messages`), FB.orderBy('createdAt','asc'), FB.limit(200));
   chatUnsub = FB.onSnapshot(q, snap => {
     const msgs = [];
     snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
     renderChat(msgs);
     scrollChat();
+  }, err => {
+    // orderBy on messages subcollection is fine (no compound index needed)
+    console.error('[BASH] Chat listener error:', err.code, err.message);
   });
-  G.unsubs.push(() => { if (chatUnsub) { chatUnsub(); chatUnsub = null; } });
 }
 
 function renderChat(msgs) {
