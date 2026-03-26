@@ -2047,6 +2047,12 @@ function partyTab(tab, btn) {
   const el = document.getElementById('pt-' + tab);
   if (el) el.style.display = 'block';
   if (btn) btn.classList.add('on');
+  else {
+    // Find and activate the matching tab button by its onclick text
+    document.querySelectorAll('#partyTabs .tab').forEach(b => {
+      if (b.getAttribute('onclick')?.includes(`'${tab}'`)) b.classList.add('on');
+    });
+  }
   soundClick();
   if (tab === 'chat') { setupChat(); setTimeout(scrollChat, 200); }
   if (tab === 'photos') loadPhotos(G.partyId);
@@ -2635,68 +2641,69 @@ const SPOTIFY_CLIENT_ID = 'ee0ad780e03b4032a7bdd5d8a4f18445';
 const SPOTIFY_REDIRECT   = 'https://qjtheron1983.github.io/partyplanning/';
 const SPOTIFY_SCOPES     = 'user-read-private playlist-modify-public playlist-modify-private playlist-read-private user-library-read';
 
-const SP = {
-  token: null, tokenExpiry: null,
-  searchResults: [], playlist: [],
-  searchTimer: null
-};
+const SP = { token: null, searchTimer: null };
 
-// Store Spotify token in session (PKCE flow returns via redirect)
-function initSpotify() {
-  // Check if we already have a token in sessionStorage
-  const token = sessionStorage.getItem('sp_token');
-  const expiry = sessionStorage.getItem('sp_token_expiry');
-  if (token && expiry && Date.now() < parseInt(expiry)) {
-    SP.token = token;
-    showSpotifyUI();
-    return;
-  }
-  // If no real client ID configured, show demo mode
-  if (!SPOTIFY_CLIENT_ID || SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
-    showSpotifyDemo();
-    return;
-  }
-  // PKCE Auth flow
-  const verifier = generateSpVerifier();
+// ── Get stored token ──
+function spGetToken() {
+  const t = sessionStorage.getItem('sp_token');
+  const e = sessionStorage.getItem('sp_token_expiry');
+  if (t && e && Date.now() < parseInt(e)) { SP.token = t; return t; }
+  SP.token = null;
+  return null;
+}
+
+// ── Initiate Spotify auth (PKCE) ──
+async function initSpotify() {
+  // Already have a valid token?
+  if (spGetToken()) { renderSpotifyTab(); closeModal('spotifyModal'); return; }
+
+  // Generate PKCE verifier + challenge
+  const verifier = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map(b => b.toString(16).padStart(2,'0')).join('').slice(0,43);
+  const challenge = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))
+    .then(buf => btoa(String.fromCharCode(...new Uint8Array(buf)))
+      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''));
+
+  // Store state before redirect
   sessionStorage.setItem('sp_verifier', verifier);
-  sessionStorage.setItem('sp_party', G.partyId);
-  generateSpChallenge(verifier).then(challenge => {
-    const params = new URLSearchParams({
-      client_id: SPOTIFY_CLIENT_ID,
-      response_type: 'code',
-      redirect_uri: SPOTIFY_REDIRECT,
-      scope: SPOTIFY_SCOPES,
-      code_challenge_method: 'S256',
-      code_challenge: challenge,
-      state: 'bash_spotify'
-    });
-    window.location.href = 'https://accounts.spotify.com/authorize?' + params;
+  sessionStorage.setItem('sp_party', G.partyId || '');
+  sessionStorage.setItem('sp_return', 'true');
+
+  const url = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
+    client_id: SPOTIFY_CLIENT_ID,
+    response_type: 'code',
+    redirect_uri: SPOTIFY_REDIRECT,
+    scope: SPOTIFY_SCOPES,
+    code_challenge_method: 'S256',
+    code_challenge: challenge,
+    state: 'bash_spotify'
   });
+  window.location.href = url;
 }
 
-function generateSpVerifier() {
-  const arr = new Uint8Array(32);
-  crypto.getRandomValues(arr);
-  return btoa(String.fromCharCode(...arr)).replace(/[^a-zA-Z0-9]/g,'').slice(0,43);
-}
-
-async function generateSpChallenge(verifier) {
-  const data = new TextEncoder().encode(verifier);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-}
-
-// Handle Spotify OAuth callback
+// ── Handle OAuth callback (called on page load if ?code=... present) ──
 async function handleSpotifyCallback() {
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
   const state = params.get('state');
+  const error = params.get('error');
+
+  if (error) {
+    console.error('[Spotify] Auth error:', error);
+    toast('Spotify connection cancelled.', 'info');
+    window.history.replaceState({}, '', window.location.pathname);
+    return;
+  }
   if (!code || state !== 'bash_spotify') return;
-  // Clean URL
-  window.history.replaceState({}, document.title, window.location.pathname);
+
+  // Clean URL immediately
+  window.history.replaceState({}, '', window.location.pathname);
+
   const verifier = sessionStorage.getItem('sp_verifier');
   const partyId  = sessionStorage.getItem('sp_party');
-  if (!verifier) return;
+  if (!verifier) { toast('Spotify auth error — missing verifier. Try again.', 'err'); return; }
+
+  showLoad();
   try {
     const res = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
@@ -2710,127 +2717,166 @@ async function handleSpotifyCallback() {
       })
     });
     const data = await res.json();
+    console.log('[Spotify] Token response:', res.status, data.error || 'ok');
+
     if (data.access_token) {
       SP.token = data.access_token;
       sessionStorage.setItem('sp_token', data.access_token);
-      sessionStorage.setItem('sp_token_expiry', Date.now() + data.expires_in * 1000);
-      if (partyId) { G.partyId = partyId; await openParty(partyId); partyTab('spotify', null); }
-      showSpotifyUI();
+      sessionStorage.setItem('sp_token_expiry', String(Date.now() + (data.expires_in || 3600) * 1000));
+      sessionStorage.removeItem('sp_verifier');
+      toast('🎵 Spotify connected!', 'ok');
+
+      // Navigate back to the party's spotify tab
+      if (partyId) {
+        await openParty(partyId);
+        // Give the party UI time to render, then switch to spotify tab
+        setTimeout(() => {
+          const spBtn = document.querySelector('#partyTabs .tab:last-child');
+          partyTab('spotify', spBtn);
+        }, 300);
+      }
+    } else {
+      hideLoad();
+      const msg = data.error_description || data.error || 'Token exchange failed';
+      console.error('[Spotify] Token error:', data);
+      toast('Spotify error: ' + msg, 'err');
     }
-  } catch(e) { console.error('Spotify auth failed:', e); }
-}
-
-function showSpotifyDemo() {
-  // Demo mode with mock data when no client ID configured
-  SP.token = 'demo';
-  document.getElementById('spContent').innerHTML = buildSpotifyUI(true);
-  document.getElementById('spTabContent').innerHTML = buildSpotifyTabUI();
-  loadPartyPlaylist();
-}
-
-function showSpotifyUI() {
-  document.getElementById('spContent').innerHTML = buildSpotifyUI(false);
-  document.getElementById('spTabContent').innerHTML = buildSpotifyTabUI();
-  loadPartyPlaylist();
-}
-
-function buildSpotifyUI(demo) {
-  return `
-    <div class="sp-hdr">
-      <div class="sp-logo">🎵</div>
-      <div style="flex:1">
-        <div style="font-size:.9rem;font-weight:700;color:white">${demo ? '🎮 Demo Mode' : '✅ Spotify Connected'}</div>
-        <div style="font-size:.72rem;color:#b3b3b3">${demo ? 'Add your Spotify Client ID to connect' : 'Search and add tracks to your party playlist'}</div>
-      </div>
-    </div>
-    <input class="sp-search" id="spSearchInput" placeholder="🔍 Search for tracks, artists..." oninput="spSearchDebounce(this.value)">
-    <div id="spSearchResults"></div>
-    <div class="sp-sec-lbl">🎵 Party Playlist</div>
-    <div id="spPlaylist"><div class="sp-empty">No tracks yet — search and add some! 🎶</div></div>
-  `;
-}
-
-function buildSpotifyTabUI() {
-  return `
-    <div style="margin-bottom:10px">
-      <input class="sp-search" style="background:#1a1a1a" id="spTabSearch" placeholder="🔍 Search tracks..." oninput="spSearchDebounce(this.value, true)">
-      <div id="spTabResults"></div>
-    </div>
-    <div class="sp-sec-lbl">🎵 Party Playlist</div>
-    <div id="spTabPlaylist"><div class="sp-empty">No tracks yet!</div></div>
-  `;
-}
-
-function spSearchDebounce(q, isTab = false) {
-  clearTimeout(SP.searchTimer);
-  SP.searchTimer = setTimeout(() => spSearch(q, isTab), 400);
-}
-
-async function spSearch(q, isTab = false) {
-  const resultsEl = document.getElementById(isTab ? 'spTabResults' : 'spSearchResults');
-  if (!q || q.length < 2) { if (resultsEl) resultsEl.innerHTML = ''; return; }
-
-  if (SP.token === 'demo') {
-    // Demo tracks
-    const demoTracks = [
-      { id:'d1', name:'Levitating', artists:[{name:'Dua Lipa'}], album:{images:[{url:''}]}, duration_ms:203000 },
-      { id:'d2', name:'Blinding Lights', artists:[{name:'The Weeknd'}], album:{images:[{url:''}]}, duration_ms:200000 },
-      { id:'d3', name:'As It Was', artists:[{name:'Harry Styles'}], album:{images:[{url:''}]}, duration_ms:167000 },
-      { id:'d4', name:'STAY', artists:[{name:'The Kid LAROI, Justin Bieber'}], album:{images:[{url:''}]}, duration_ms:141000 },
-      { id:'d5', name:'Heat Waves', artists:[{name:'Glass Animals'}], album:{images:[{url:''}]}, duration_ms:238000 },
-    ].filter(t => t.name.toLowerCase().includes(q.toLowerCase()) || t.artists[0].name.toLowerCase().includes(q.toLowerCase()));
-    if (resultsEl) resultsEl.innerHTML = demoTracks.length ? renderTrackList(demoTracks, false) : '<div class="sp-empty">No results found</div>';
-    return;
+  } catch(e) {
+    hideLoad();
+    console.error('[Spotify] Fetch error:', e);
+    toast('Could not connect to Spotify: ' + e.message, 'err');
   }
-
-  try {
-    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=8`, {
-      headers: { 'Authorization': 'Bearer ' + SP.token }
-    });
-    const data = await res.json();
-    if (res.status === 401) { SP.token = null; sessionStorage.removeItem('sp_token'); toast('Spotify session expired. Reconnect.', 'err'); return; }
-    const tracks = data.tracks?.items || [];
-    if (resultsEl) resultsEl.innerHTML = tracks.length ? renderTrackList(tracks, false) : '<div class="sp-empty">No results found</div>';
-  } catch(e) { console.error(e); }
 }
 
-function renderTrackList(tracks, inPlaylist) {
+// ── Render the Spotify tab (always show search + playlist) ──
+function renderSpotifyTab() {
+  const el = document.getElementById('spTabContent');
+  if (!el) return;
+  const hasToken = !!spGetToken();
+  el.innerHTML = buildSpotifyTabUI(hasToken);
+  loadPartyPlaylist();
+}
+
+function buildSpotifyTabUI(connected) {
+  return `
+    ${connected ? `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 10px;background:rgba(30,215,96,.1);border-radius:8px">
+        <div style="width:10px;height:10px;background:#1DB954;border-radius:50%;flex-shrink:0"></div>
+        <span style="color:#1DB954;font-size:.78rem;font-weight:700">Spotify Connected</span>
+        <button onclick="spDisconnect()" style="margin-left:auto;padding:3px 8px;background:transparent;border:1px solid #535353;border-radius:4px;color:#b3b3b3;font-size:.7rem;cursor:pointer">Disconnect</button>
+      </div>
+      <input class="sp-search" id="spSearchInput" placeholder="🔍 Search for tracks, artists...">
+      <div id="spSearchResults" style="margin-bottom:10px"></div>
+    ` : `
+      <div style="text-align:center;padding:18px 10px 20px">
+        <div style="font-size:2rem;margin-bottom:8px">🎵</div>
+        <p style="color:#b3b3b3;font-size:.82rem;margin-bottom:14px">Connect Spotify to search and add tracks</p>
+        <button class="sp-connect-btn" onclick="initSpotify()">
+          🎵 Connect with Spotify
+        </button>
+      </div>
+    `}
+    <div class="sp-sec-lbl">🎵 Party Playlist</div>
+    <div id="spPlaylist"><div class="sp-empty">No tracks yet — ${connected ? 'search above' : 'connect Spotify'} to add some! 🎶</div></div>
+  `;
+
+  // Attach search listener after render
+}
+
+// Called after buildSpotifyTabUI renders — attach event listener
+function attachSpSearch() {
+  const input = document.getElementById('spSearchInput');
+  if (input) {
+    input.addEventListener('input', e => {
+      clearTimeout(SP.searchTimer);
+      SP.searchTimer = setTimeout(() => spSearch(e.target.value), 400);
+    });
+  }
+}
+
+function spDisconnect() {
+  sessionStorage.removeItem('sp_token');
+  sessionStorage.removeItem('sp_token_expiry');
+  SP.token = null;
+  renderSpotifyTab();
+  toast('Spotify disconnected', 'info');
+}
+
+async function spSearch(q) {
+  const resultsEl = document.getElementById('spSearchResults');
+  if (!resultsEl) return;
+  if (!q || q.length < 2) { resultsEl.innerHTML = ''; return; }
+  if (!SP.token) return;
+
+  resultsEl.innerHTML = '<div class="sp-empty">Searching... 🔍</div>';
+  try {
+    const res = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=8&market=ZA`,
+      { headers: { 'Authorization': 'Bearer ' + SP.token } }
+    );
+    if (res.status === 401) {
+      sessionStorage.removeItem('sp_token');
+      sessionStorage.removeItem('sp_token_expiry');
+      SP.token = null;
+      toast('Spotify session expired — please reconnect.', 'err');
+      renderSpotifyTab();
+      return;
+    }
+    const data = await res.json();
+    const tracks = data.tracks?.items || [];
+    resultsEl.innerHTML = tracks.length
+      ? renderTrackList(tracks)
+      : '<div class="sp-empty">No tracks found. Try a different search.</div>';
+  } catch(e) {
+    console.error('[Spotify] Search error:', e);
+    resultsEl.innerHTML = '<div class="sp-empty">Search failed. Check your connection.</div>';
+  }
+}
+
+function renderTrackList(tracks) {
+  const playlist = G.party?.playlist || [];
   return tracks.map(t => {
-    const img = t.album?.images?.[0]?.url;
-    const artist = t.artists?.map(a => a.name).join(', ') || '';
-    const mins = Math.floor((t.duration_ms||0) / 60000);
-    const secs = String(Math.floor(((t.duration_ms||0) % 60000) / 1000)).padStart(2,'0');
-    const alreadyIn = (G.party?.playlist || []).some(p => p.id === t.id);
-    return `<div class="sp-track ${alreadyIn?'in-list':''}">
-      <div class="sp-track-img">${img ? `<img src="${img}" alt="">` : '🎵'}</div>
+    const img = t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || '';
+    const artist = (t.artists || []).map(a => a.name).join(', ');
+    const mins = Math.floor((t.duration_ms || 0) / 60000);
+    const secs = String(Math.floor(((t.duration_ms || 0) % 60000) / 1000)).padStart(2,'0');
+    const inList = playlist.some(p => p.id === t.id);
+    // Serialize track safely for onclick
+    const trackData = JSON.stringify({ id: t.id, name: t.name, artist, img, duration_ms: t.duration_ms || 0 })
+      .replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `
+    <div class="sp-track ${inList ? 'in-list' : ''}">
+      <div class="sp-track-img">${img ? `<img src="${img}" alt="" style="width:42px;height:42px;object-fit:cover;border-radius:4px">` : '🎵'}</div>
       <div class="sp-track-info">
         <div class="sp-track-name">${esc(t.name)}</div>
-        <div class="sp-track-artist">${esc(artist)} • ${mins}:${secs}</div>
+        <div class="sp-track-artist">${esc(artist)} · ${mins}:${secs}</div>
       </div>
-      ${!alreadyIn ? `<button class="sp-add-btn" onclick="addTrackToPlaylist(${JSON.stringify({id:t.id,name:t.name,artist,img:img||'',duration_ms:t.duration_ms||0}).replace(/"/g,'&quot;')})">+ Add</button>`
-        : `<span style="color:#1DB954;font-size:.72rem;font-weight:800">✓ Added</span>`}
+      ${inList
+        ? `<span style="color:#1DB954;font-size:.72rem;font-weight:800;flex-shrink:0">✓ Added</span>`
+        : `<button class="sp-add-btn" onclick='addTrackToPlaylist(${trackData.replace(/"/g,"&quot;")})'>+ Add</button>`}
     </div>`;
   }).join('');
 }
 
 async function addTrackToPlaylist(track) {
-  if (!G.partyId) return;
+  if (!G.partyId) { toast('No party selected', 'err'); return; }
   haptic('light');
-  soundClick();
   try {
     const ref = FB.doc(FB.db, 'parties', G.partyId);
     const snap = await FB.getDoc(ref);
     const playlist = snap.data().playlist || [];
-    if (playlist.some(t => t.id === track.id)) { toast('Track already in playlist!', 'info'); return; }
-    playlist.push({ ...track, addedBy: G.user.uid, addedByName: G.user.displayName || G.user.email.split('@')[0], addedAt: new Date().toISOString(), votes: 0 });
+    if (playlist.some(t => t.id === track.id)) { toast('Already in playlist!', 'info'); return; }
+    const uname = G.user.displayName || G.user.email.split('@')[0];
+    playlist.push({ ...track, addedBy: G.user.uid, addedByName: uname, addedAt: new Date().toISOString(), votes: 0 });
     await FB.updateDoc(ref, { playlist });
     G.party = { ...G.party, playlist };
-    toast(`Added: ${track.name} 🎵`, 'ok');
+    toast(`🎵 Added: ${track.name}`, 'ok');
+    soundSuccess();
     renderPlaylistDisplay();
-    // Re-render search to update "added" state
-    const si = document.getElementById('spSearchInput') || document.getElementById('spTabSearch');
-    if (si && si.value) spSearch(si.value);
-  } catch(e) { toast(e.message, 'err'); }
+    // Refresh search results to show ✓ Added
+    const inp = document.getElementById('spSearchInput');
+    if (inp && inp.value) spSearch(inp.value);
+  } catch(e) { toast('Could not add track: ' + e.message, 'err'); }
 }
 
 async function voteTrack(trackId, dir) {
@@ -2862,25 +2908,27 @@ async function removeTrackFromPlaylist(trackId) {
 
 function renderPlaylistDisplay() {
   const playlist = (G.party?.playlist || []).sort((a,b) => (b.votes||0) - (a.votes||0));
-  const isOrg = G.party?.organiserId === G.user.uid;
-  const els = ['spPlaylist', 'spTabPlaylist', 'spPlaylistDisplay'].map(id => document.getElementById(id));
-  const html = playlist.length ? playlist.map((t, i) => `
-    <div class="sp-track" style="border-bottom:1px solid rgba(255,255,255,.06);padding:10px">
-      <div style="color:#b3b3b3;font-size:.78rem;font-weight:800;width:18px;text-align:center">${i+1}</div>
-      <div class="sp-track-img">${t.img ? `<img src="${t.img}" style="width:42px;height:42px;border-radius:5px;object-fit:cover" alt="">` : '🎵'}</div>
-      <div class="sp-track-info">
-        <div class="sp-track-name">${esc(t.name)}</div>
-        <div class="sp-track-artist">${esc(t.artist||'')} • Added by ${esc(t.addedByName||'squad')}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <button onclick="voteTrack('${t.id}',-1)" style="background:transparent;border:none;color:#b3b3b3;cursor:pointer;font-size:1rem;padding:2px">👎</button>
-        <span style="color:#1DB954;font-weight:800;font-size:.8rem;min-width:20px;text-align:center">${t.votes||0}</span>
-        <button onclick="voteTrack('${t.id}',1)" style="background:transparent;border:none;color:#1DB954;cursor:pointer;font-size:1rem;padding:2px">👍</button>
-        ${isOrg ? `<button onclick="removeTrackFromPlaylist('${t.id}')" style="background:transparent;border:none;color:#666;cursor:pointer;font-size:.8rem;padding:2px;margin-left:4px"><i class="fa fa-times"></i></button>` : ''}
-      </div>
-    </div>`).join('')
-  : '<div class="sp-empty">No tracks yet — search and add some! 🎶</div>';
-  els.forEach(el => { if (el) el.innerHTML = html; });
+  const isOrg = G.party?.organiserId === G.user?.uid;
+  const html = playlist.length
+    ? playlist.map((t, i) => `
+      <div class="sp-track" style="padding:10px;border-bottom:1px solid rgba(255,255,255,.05)">
+        <div style="color:#b3b3b3;font-size:.76rem;font-weight:700;width:20px;text-align:center;flex-shrink:0">${i+1}</div>
+        <div class="sp-track-img">${t.img ? `<img src="${t.img}" alt="" style="width:42px;height:42px;object-fit:cover;border-radius:4px">` : '🎵'}</div>
+        <div class="sp-track-info">
+          <div class="sp-track-name">${esc(t.name)}</div>
+          <div class="sp-track-artist">${esc(t.artist||'')} · Added by ${esc(t.addedByName||'squad')}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+          <button onclick="voteTrack('${t.id}',-1)" style="background:transparent;border:none;color:#b3b3b3;cursor:pointer;font-size:.95rem;padding:2px">👎</button>
+          <span style="color:#1DB954;font-weight:800;font-size:.78rem;min-width:22px;text-align:center">${t.votes||0}</span>
+          <button onclick="voteTrack('${t.id}',1)" style="background:transparent;border:none;color:#1DB954;cursor:pointer;font-size:.95rem;padding:2px">👍</button>
+          ${isOrg ? `<button onclick="removeTrackFromPlaylist('${t.id}')" style="background:transparent;border:none;color:#535353;cursor:pointer;padding:2px 4px;font-size:.8rem;margin-left:2px"><i class="fa fa-times"></i></button>` : ''}
+        </div>
+      </div>`).join('')
+    : '<div class="sp-empty">No tracks yet — add some! 🎶</div>';
+
+  const el = document.getElementById('spPlaylist');
+  if (el) el.innerHTML = html;
 }
 
 async function loadPartyPlaylist() {
@@ -2888,30 +2936,12 @@ async function loadPartyPlaylist() {
   try {
     const snap = await FB.getDoc(FB.doc(FB.db, 'parties', G.partyId));
     if (snap.exists()) {
-      G.party = { ...G.party, playlist: snap.data().playlist || [] };
+      G.party = { ...(G.party || {}), id: G.partyId, ...snap.data() };
       renderPlaylistDisplay();
+      // Attach search listener after UI is built
+      setTimeout(attachSpSearch, 100);
     }
-  } catch(e) {}
-}
-
-function renderSpotifyTab() {
-  loadPartyPlaylist();
-  const el = document.getElementById('spTabContent');
-  if (!el) return;
-  const playlist = G.party?.playlist || [];
-  if (playlist.length > 0) {
-    // Show playlist + mini search without needing to connect
-    el.innerHTML = buildSpotifyTabUI();
-    renderPlaylistDisplay();
-  }
-  // If token available, show search
-  const token = sessionStorage.getItem('sp_token');
-  const expiry = sessionStorage.getItem('sp_token_expiry');
-  if (token && expiry && Date.now() < parseInt(expiry)) {
-    SP.token = token;
-    el.innerHTML = buildSpotifyTabUI();
-    renderPlaylistDisplay();
-  }
+  } catch(e) { console.error('[Spotify] loadPartyPlaylist error:', e); }
 }
 
 // ══ SERVICE WORKER ══
