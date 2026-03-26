@@ -595,8 +595,11 @@ textarea.input{resize:vertical;min-height:72px}
 </head>
 <body>
 
-
-<!-- EDIT PARTY MODAL -->
+<!-- LOADING OVERLAY -->
+<div id="loading" style="display:none;position:fixed;inset:0;background:rgba(245,240,255,.85);backdrop-filter:blur(8px);z-index:9900;align-items:center;justify-content:center;flex-direction:column;gap:14px">
+  <div class="spin"></div>
+  <div style="color:var(--txt2);font-size:.85rem;font-weight:600">Loading... 🎉</div>
+</div>
 <div class="modal-ov" id="editPartyModal">
   <div class="modal" style="max-width:600px">
     <div class="modal-h"><h2>Edit Party ✏️</h2><button class="modal-x" onclick="closeModal('editPartyModal')"><i class="fa fa-times"></i></button></div>
@@ -744,6 +747,19 @@ textarea.input{resize:vertical;min-height:72px}
         <div class="sc s4"><div class="sc-ico"><i class="fa fa-users"></i></div><div class="sc-num" id="stFriends">0</div><div class="sc-lbl">Squad Members</div></div>
       </div>
       <div class="ph" style="margin-bottom:14px"><h2 style="font-size:1.15rem">Upcoming Parties 🔥</h2></div>
+      <div id="rulesWarning" style="display:none;background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.3);border-radius:var(--rsm);padding:14px 16px;margin-bottom:16px;font-size:.84rem">
+        <strong>⚠️ Firestore Rules blocking access!</strong><br>
+        Go to <strong>Firebase Console → Firestore → Rules</strong> and paste these rules, then click Publish:
+        <pre style="background:rgba(0,0,0,.06);border-radius:6px;padding:10px;margin-top:8px;font-size:.72rem;overflow-x:auto;white-space:pre-wrap">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}</pre>
+        <button onclick="document.getElementById('rulesWarning').style.display='none';loadParties()" style="margin-top:10px;padding:7px 14px;background:var(--v1);border:none;border-radius:8px;color:white;font-weight:700;cursor:pointer;font-size:.8rem">Retry after fixing rules</button>
+      </div>
       <div class="pgrid" id="dashGrid"><div class="empty"><div class="ei">🥲</div><h3>No parties yet!</h3><p>Create or join one to get started</p><button class="btn btn-g" onclick="openModal('createModal')">Create Party 🎉</button></div></div>
     </div>
 
@@ -1130,13 +1146,30 @@ function haptic(type = 'light') {
 
 // ── AUDIO ──
 let audioCtx = null;
+let audioUnlocked = false;
+
+// Unlock audio on first user interaction
+document.addEventListener('click', () => {
+  if (!audioUnlocked) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      audioUnlocked = true;
+    } catch(e) {}
+  }
+}, { once: false, passive: true });
+
 function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+  }
   return audioCtx;
 }
 function playTone(freq = 440, dur = 0.15, type = 'sine', vol = 0.3) {
   try {
     const ctx = getAudioCtx();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') { ctx.resume(); return; } // silently skip if not unlocked
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain); gain.connect(ctx.destination);
@@ -1144,7 +1177,7 @@ function playTone(freq = 440, dur = 0.15, type = 'sine', vol = 0.3) {
     gain.gain.setValueAtTime(vol, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
     osc.start(); osc.stop(ctx.currentTime + dur);
-  } catch(e) {}
+  } catch(e) {} // never crash on sound
 }
 function soundSuccess() { playTone(520, 0.12); setTimeout(() => playTone(660, 0.18), 100); haptic('success'); }
 function soundError()   { playTone(220, 0.2, 'sawtooth'); haptic('error'); }
@@ -1165,8 +1198,14 @@ function toast(msg, type = 'info') {
 }
 
 // ── LOADING ──
-function showLoad() { document.getElementById('loading').classList.add('show'); }
-function hideLoad() { document.getElementById('loading').classList.remove('show'); }
+function showLoad() {
+  const el = document.getElementById('loading');
+  if (el) el.style.display = 'flex';
+}
+function hideLoad() {
+  const el = document.getElementById('loading');
+  if (el) el.style.display = 'none';
+}
 
 // ── MODAL ──
 function openModal(id) { document.getElementById(id).classList.add('on'); soundClick(); }
@@ -1291,30 +1330,45 @@ whenFB(() => {
   FB.onAuthStateChanged(FB.auth, async user => {
     if (user) {
       G.user = user;
+      // Show app immediately, don't wait for data
       document.getElementById('auth').style.display = 'none';
       document.getElementById('app').style.display = 'block';
-      const name = user.displayName || user.email.split('@')[0];
-      document.getElementById('greetName').textContent = name.split(' ')[0];
-      document.getElementById('sbName').textContent = name;
-      document.getElementById('sbEmail').textContent = user.email;
-      setAvaText(document.getElementById('sbAva'), name);
-      // Load avatar
-      loadUserAvatar(user.uid, document.getElementById('sbAva'));
-      await loadParties();
+
+      try {
+        const name = user.displayName || user.email.split('@')[0];
+        const firstName = name.split(' ')[0];
+        document.getElementById('greetName').textContent = firstName;
+        document.getElementById('sbName').textContent = name;
+        document.getElementById('sbEmail').textContent = user.email;
+        setAvaText(document.getElementById('sbAva'), name);
+      } catch(e) { console.error('[BASH] UI update error:', e); }
+
+      // Load data in background - never block app from showing
+      loadParties().catch(e => console.error('[BASH] loadParties failed:', e));
       setupNotifs();
       listenPublic();
+
+      // Load avatar in background
+      loadUserAvatar(user.uid, document.getElementById('sbAva')).catch(()=>{});
+
       hideLoad();
-      // Handle PWA URL shortcuts
-      const p = new URLSearchParams(location.search);
-      if (p.get('action') === 'create') openModal('createModal');
-      if (p.get('action') === 'join') goTo('join');
-      // Handle Spotify OAuth callback
-      if (p.get('state') === 'bash_spotify' && p.get('code')) handleSpotifyCallback();
+
+      // Handle URL params
+      try {
+        const p = new URLSearchParams(location.search);
+        if (p.get('action') === 'create') openModal('createModal');
+        if (p.get('action') === 'join') goTo('join');
+        if (p.get('state') === 'bash_spotify' && p.get('code')) handleSpotifyCallback();
+      } catch(e) {}
+
     } else {
       document.getElementById('auth').style.display = 'flex';
       document.getElementById('app').style.display = 'none';
       hideLoad();
     }
+  }, err => {
+    console.error('[BASH] Auth state error:', err);
+    hideLoad();
   });
 });
 
@@ -1378,6 +1432,7 @@ function closeSB() {
 
 // ══ LOAD PARTIES ══
 async function loadParties() {
+  if (!G.user) return;
   const uid = G.user.uid;
   try {
     const [s1, s2] = await Promise.all([
@@ -1390,7 +1445,20 @@ async function loadParties() {
     G.parties = Object.values(map);
     renderGrids();
     renderStats();
-  } catch(e) { toast('Could not load parties: ' + e.message, 'err'); }
+  } catch(e) {
+    console.error('[BASH] loadParties error:', e.code, e.message);
+    if (e.code === 'permission-denied') {
+      const w = document.getElementById('rulesWarning');
+      if (w) w.style.display = 'block';
+      toast('⚠️ Firestore rules are blocking access — see the warning on dashboard', 'err');
+    } else {
+      toast('Could not load parties: ' + e.message, 'err');
+    }
+    // Still render empty state so app is usable
+    G.parties = [];
+    renderGrids();
+    renderStats();
+  }
 }
 
 function renderGrids() {
@@ -1403,6 +1471,7 @@ function renderGrids() {
 
 function renderGrid(id, arr, uid) {
   const el = document.getElementById(id);
+  if (!el) return; // guard against missing element
   if (!arr.length) {
     el.innerHTML = '<div class="empty"><div class="ei">🥲</div><h3>Nothing here yet!</h3><p>Create or join a party to get started</p></div>';
     return;
@@ -2428,11 +2497,17 @@ function closeNotif() { document.getElementById('notifPanel').classList.remove('
 
 // ══ DISCOVER ══
 function listenPublic() {
-  FB.getDocs(FB.query(FB.collection(FB.db,'parties'),FB.where('visibility','==','public'),FB.limit(20))).then(snap => {
-    const parties = [];
-    snap.forEach(d => parties.push({ id: d.id, ...d.data() }));
-    renderHype(parties);
-  });
+  const feed = document.getElementById('hypeFeed');
+  FB.getDocs(FB.query(FB.collection(FB.db,'parties'), FB.where('visibility','==','public'), FB.limit(20)))
+    .then(snap => {
+      const parties = [];
+      snap.forEach(d => parties.push({ id: d.id, ...d.data() }));
+      renderHype(parties);
+    })
+    .catch(e => {
+      console.error('[BASH] listenPublic error:', e.code, e.message);
+      if (feed) feed.innerHTML = '<div class="empty"><div class="ei">🌐</div><h3>Could not load</h3><p>Check your Firestore security rules</p></div>';
+    });
 }
 
 function renderHype(parties) {
@@ -2458,9 +2533,15 @@ function renderHype(parties) {
 }
 
 function quickJoin(code) {
-  document.getElementById('joinCode').value = code;
   goTo('join');
-  joinByCode();
+  // Wait one frame for section to render before setting value and joining
+  requestAnimationFrame(() => {
+    const input = document.getElementById('joinCode');
+    if (input) {
+      input.value = code;
+      joinByCode();
+    }
+  });
 }
 
 
