@@ -1,20 +1,19 @@
-// BASH PWA Service Worker v4.0
-const CACHE = 'bash-v4';
+// BASH PWA Service Worker v6.0
+const CACHE = 'bash-v6';
 
 const PRECACHE = [
-  './',
   './index.html',
   './offline.html',
   './manifest.json'
 ];
 
-// ── Install: cache only local files ──
+// ── Install ──
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE).then(cache =>
       Promise.allSettled(
         PRECACHE.map(url =>
-          cache.add(url).catch(e => console.log('[SW] Skipping:', url, e.message))
+          cache.add(url).catch(e => console.log('[SW] Skip:', url, e.message))
         )
       )
     ).then(() => self.skipWaiting())
@@ -30,39 +29,37 @@ self.addEventListener('activate', event => {
   );
 });
 
-// ── Fetch: smart routing ──
+// ── Fetch ──
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET
   if (request.method !== 'GET') return;
-  // Skip chrome extensions
   if (url.protocol === 'chrome-extension:') return;
-  // Skip Firebase, Google APIs, Spotify, Tenor — always network
+
+  // Always go network for Firebase, Spotify, Tenor, Google APIs
   const passThrough = [
     'firebaseio.com', 'googleapis.com', 'firebase.com',
     'gstatic.com', 'accounts.spotify.com', 'api.spotify.com',
-    'tenor.com', 'fonts.googleapis.com'
+    'tenor.com', 'fonts.googleapis.com', 'firebaseapp.com',
+    'firebasestorage.app'
   ];
   if (passThrough.some(h => url.hostname.includes(h))) return;
 
-  // For local app files: cache-first with network fallback
-  if (url.origin === self.location.origin) {
+  // Local app files: cache-first with network fallback
+  if (url.hostname === 'qjtheron1983.github.io') {
     event.respondWith(
       caches.match(request).then(cached => {
         if (cached) return cached;
         return fetch(request).then(response => {
-          // Cache successful HTML/JS/CSS responses
-          if (response.ok && ['document','script','style','image','font'].includes(request.destination)) {
+          if (response.ok) {
             const clone = response.clone();
             caches.open(CACHE).then(c => c.put(request, clone));
           }
           return response;
         }).catch(() => {
-          // Offline fallback for navigation
           if (request.destination === 'document') {
-            return caches.match('/offline.html');
+            return caches.match('./index.html') || caches.match('./offline.html');
           }
         });
       })
@@ -70,7 +67,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // CDN assets (fonts, FA icons): cache-first
+  // CDN assets: cache-first
   if (url.hostname.includes('cdnjs.cloudflare.com') || url.hostname.includes('fonts.gstatic.com')) {
     event.respondWith(
       caches.match(request).then(cached => {
@@ -89,25 +86,15 @@ self.addEventListener('fetch', event => {
 
 // ── Push notifications ──
 self.addEventListener('push', event => {
-  let data = { title: '🎉 BASH', body: 'New party activity!', icon: '/icons/icon-192.png' };
+  let data = { title: '🎉 BASH', body: 'New party activity!', icon: '/partyplanning/icons/icon-192.png' };
   try { data = { ...data, ...event.data.json() }; } catch(e) {}
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
       icon: data.icon,
-      badge: '/icons/icon-72.png',
+      badge: '/partyplanning/icons/icon-72.png',
       vibrate: [200, 100, 200],
       data: { url: data.url || '/' }
-    })
-  );
-});
-
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(cls => {
-      for (const c of cls) { if ('focus' in c) return c.focus(); }
-      if (clients.openWindow) return clients.openWindow(event.notification.data?.url || '/');
     })
   );
 });

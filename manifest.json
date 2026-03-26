@@ -2,22 +2,28 @@
   "name": "BASH — Party Planning",
   "short_name": "BASH",
   "description": "The ultimate party planning app for your squad",
-  "start_url": "/partyplanning/index.html",
-  "scope": "/partyplanning/",
+  "start_url": "https://qjtheron1983.github.io/partyplanning/index.html",
+  "scope": "https://qjtheron1983.github.io/partyplanning/",
   "display": "standalone",
   "background_color": "#7C3AED",
   "theme_color": "#7C3AED",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-192.png",
-      "sizes": "192x192",
+      "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-72.png",
+      "sizes": "72x72",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-512.png",
-      "sizes": "512x512",
+      "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-128.png",
+      "sizes": "128x128",
       "type": "image/png",
       "purpose": "any maskable"
     },
@@ -26,21 +32,31 @@
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any maskable"
-    }
-  ],
-  "categories": ["social", "lifestyle", "entertainment"],
-  "shortcuts": [
-    {
-      "name": "Create Party",
-      "short_name": "New Party",
-      "url": "/partyplanning/index.html?action=create",
-      "icons": [{ "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
-      "name": "Join Party",
-      "short_name": "Join",
-      "url": "/partyplanning/index.html?action=join",
-      "icons": [{ "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-96.png", "sizes": "96x96" }]
+      "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://qjtheron1983.github.io/partyplanning/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["social", "lifestyle", "entertainment"]
 }
