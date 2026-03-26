@@ -2630,6 +2630,11 @@ async function confirmDeleteParty() {
 }
 
 // ══ SPOTIFY INTEGRATION ══
+// ── Spotify Config ──
+const SPOTIFY_CLIENT_ID = 'ee0ad780e03b4032a7bdd5d8a4f18445';
+const SPOTIFY_REDIRECT   = 'https://qjtheron1983.github.io/partyplanning/';
+const SPOTIFY_SCOPES     = 'user-read-private playlist-modify-public playlist-modify-private playlist-read-private user-library-read';
+
 const SP = {
   token: null, tokenExpiry: null,
   searchResults: [], playlist: [],
@@ -2646,8 +2651,8 @@ function initSpotify() {
     showSpotifyUI();
     return;
   }
-  // If no real client ID, show demo mode
-  if (SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
+  // If no real client ID configured, show demo mode
+  if (!SPOTIFY_CLIENT_ID || SPOTIFY_CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
     showSpotifyDemo();
     return;
   }
