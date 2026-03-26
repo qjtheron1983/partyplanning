@@ -6,6 +6,7 @@
 <title>BASH 🎉</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7C3AED">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BASH">
@@ -585,24 +586,6 @@ textarea.input{resize:vertical;min-height:72px}
 .sp-sec-lbl{font-size:.68rem;font-weight:800;color:#b3b3b3;text-transform:uppercase;letter-spacing:1.5px;margin:14px 0 7px;padding:0 2px}
 .sp-empty{text-align:center;color:#b3b3b3;font-size:.82rem;padding:24px;font-style:italic}
 
-/* ══ SUBSCRIPTION WALL ══ */
-.sub-wall{position:fixed;inset:0;background:rgba(245,240,255,.97);backdrop-filter:blur(12px);z-index:8000;display:none;align-items:center;justify-content:center;padding:20px}
-.sub-wall.on{display:flex}
-.sub-card{background:var(--card);border:1.5px solid var(--border2);border-radius:28px;padding:36px 30px;max-width:480px;width:100%;text-align:center;box-shadow:var(--sh3);position:relative;overflow:hidden}
-.sub-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--v1),var(--pk),var(--am))}
-.sub-price{font-family:'Space Grotesk',sans-serif;font-size:3rem;font-weight:700;background:linear-gradient(135deg,var(--v1),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin:10px 0 2px}
-.sub-features{text-align:left;margin:18px 0;display:flex;flex-direction:column;gap:9px}
-.sub-feat{display:flex;align-items:center;gap:10px;font-size:.85rem;font-weight:600;color:var(--txt)}
-.sub-feat i{color:var(--lm);width:16px;flex-shrink:0}
-.pay-methods{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
-.pay-opt{flex:1;min-width:110px;padding:12px 8px;background:var(--bg2);border:2px solid var(--border);border-radius:var(--rsm);cursor:pointer;transition:all .18s;text-align:center}
-.pay-opt:hover,.pay-opt.on{border-color:var(--v1);background:rgba(124,58,237,.06)}
-.pay-ico{font-size:1.5rem;margin-bottom:4px}
-.pay-lbl{font-size:.74rem;font-weight:800;color:var(--txt)}
-.pay-sub-t{font-size:.66rem;color:var(--txt3)}
-.pay-ref{width:100%;padding:11px 14px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--rxs);color:var(--txt);font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;outline:none;margin-top:10px;display:none}
-.pay-ref.on{display:block}
-.sub-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(236,72,153,.08));border:1.5px solid rgba(124,58,237,.25);border-radius:20px;padding:4px 14px;font-size:.74rem;font-weight:800;color:var(--v1)}
 
 /* ══ EDIT FAB ══ */
 .edit-fab{position:fixed;bottom:calc(22px + var(--safe-bottom));right:18px;width:50px;height:50px;background:linear-gradient(135deg,var(--v1),var(--pk));border-radius:50%;border:none;color:white;font-size:1rem;cursor:pointer;box-shadow:0 4px 16px rgba(124,58,237,.4);transition:all .2s;z-index:50;display:none;align-items:center;justify-content:center}
@@ -612,59 +595,6 @@ textarea.input{resize:vertical;min-height:72px}
 </head>
 <body>
 
-<!-- SUBSCRIPTION WALL -->
-<div class="sub-wall" id="subWall">
-  <div class="sub-card">
-    <div style="font-size:3rem;margin-bottom:8px">🎉</div>
-    <h2 style="font-size:1.5rem;margin-bottom:4px">BASH Pro</h2>
-    <p style="font-size:.84rem;color:var(--txt2);margin-bottom:0">Create unlimited parties for your squad</p>
-    <div class="sub-price">R20</div>
-    <div style="font-size:.82rem;color:var(--txt3);font-weight:600;margin-bottom:4px">per month</div>
-    <div class="sub-features">
-      <div class="sub-feat"><i class="fa fa-check-circle"></i> Create unlimited parties</div>
-      <div class="sub-feat"><i class="fa fa-check-circle"></i> Spotify playlist integration</div>
-      <div class="sub-feat"><i class="fa fa-check-circle"></i> BI dashboard & analytics</div>
-      <div class="sub-feat"><i class="fa fa-check-circle"></i> Photo uploads with filters</div>
-      <div class="sub-feat"><i class="fa fa-check-circle"></i> Priority notifications</div>
-      <div class="sub-feat"><i class="fa fa-check-circle"></i> Join unlimited parties FREE</div>
-    </div>
-    <p style="font-size:.8rem;color:var(--txt2);margin-bottom:14px">Choose your payment method:</p>
-    <div class="pay-methods" id="payMethods">
-      <div class="pay-opt" onclick="selectPay('payfast',this)">
-        <div class="pay-ico">💳</div>
-        <div class="pay-lbl">PayFast</div>
-        <div class="pay-sub-t">Card / Instant EFT</div>
-      </div>
-      <div class="pay-opt" onclick="selectPay('ozow',this)">
-        <div class="pay-ico">🏦</div>
-        <div class="pay-lbl">Ozow EFT</div>
-        <div class="pay-sub-t">Instant bank transfer</div>
-      </div>
-      <div class="pay-opt" onclick="selectPay('snapscan',this)">
-        <div class="pay-ico">📱</div>
-        <div class="pay-lbl">SnapScan</div>
-        <div class="pay-sub-t">Scan to pay</div>
-      </div>
-    </div>
-    <!-- Payment reference field (shown after method selected) -->
-    <input class="pay-ref" id="payRef" placeholder="Enter payment reference / proof number...">
-    <div id="payQR" style="display:none;margin:12px 0;background:var(--bg2);border-radius:var(--rsm);padding:14px;text-align:center">
-      <div style="font-size:3rem;margin-bottom:6px">📱</div>
-      <div style="font-size:.82rem;font-weight:700;color:var(--txt);margin-bottom:4px">Scan with SnapScan</div>
-      <div style="font-size:.74rem;color:var(--txt3)">Amount: <strong>R20</strong> • Reference: BASH-<span id="payRefCode"></span></div>
-      <div style="margin-top:8px;font-size:.72rem;color:var(--txt2)">After payment, enter your reference number below</div>
-    </div>
-    <button class="btn btn-g" style="width:100%;margin-top:8px" id="payBtn" onclick="processPayment()" disabled>
-      <i class="fa fa-lock"></i> Select a payment method
-    </button>
-    <button class="btn btn-o" style="width:100%;margin-top:8px" onclick="document.getElementById('subWall').classList.remove('on')">
-      Maybe later — just browsing
-    </button>
-    <p style="font-size:.7rem;color:var(--txt3);margin-top:12px">
-      <i class="fa fa-shield-alt"></i> Secure payment • Cancel anytime • Joining parties is always free
-    </p>
-  </div>
-</div>
 
 <!-- EDIT PARTY MODAL -->
 <div class="modal-ov" id="editPartyModal">
@@ -2392,15 +2322,26 @@ async function submitReview() {
 // ══ NOTIFICATIONS ══
 function setupNotifs() {
   const uid = G.user.uid;
-  const q = FB.query(FB.collection(FB.db, 'notifications'), FB.where('userId','==',uid), FB.orderBy('createdAt','desc'), FB.limit(50));
+  // Simple query with only userId filter — no composite index needed
+  // Sort client-side to avoid requiring a Firestore composite index
+  const q = FB.query(FB.collection(FB.db, 'notifications'), FB.where('userId','==',uid), FB.limit(50));
   const unsub = FB.onSnapshot(q, snap => {
     const notifs = [];
     snap.forEach(d => notifs.push({ id: d.id, ...d.data() }));
+    // Sort client-side by createdAt descending
+    notifs.sort((a, b) => {
+      const ta = a.createdAt?.toDate?.()?.getTime() || 0;
+      const tb = b.createdAt?.toDate?.()?.getTime() || 0;
+      return tb - ta;
+    });
     renderNotifs(notifs);
     const unread = notifs.filter(n => !n.read).length;
     const badge = document.getElementById('nbadge');
     if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.style.display = 'flex'; soundNotif(); }
     else badge.style.display = 'none';
+  }, err => {
+    // Silently handle permission errors (e.g. first load before data exists)
+    console.log('[BASH] Notif listener error:', err.code);
   });
   G.unsubs.push(unsub);
 }
@@ -2424,10 +2365,15 @@ async function addNotif(userId, title, body) {
 
 function openNotif() {
   document.getElementById('notifPanel').classList.add('on');
-  // Mark all read
-  FB.getDocs(FB.query(FB.collection(FB.db,'notifications'),FB.where('userId','==',G.user.uid),FB.where('read','==',false))).then(snap => {
-    snap.forEach(d => FB.updateDoc(d.ref, { read: true }));
-  });
+  // Mark unread ones as read using the already-fetched list (no compound query needed)
+  const badge = document.getElementById('nbadge');
+  if (badge) badge.style.display = 'none';
+  // Get all notifs by userId only (same index as setupNotifs)
+  FB.getDocs(FB.query(FB.collection(FB.db,'notifications'), FB.where('userId','==',G.user.uid), FB.limit(50))).then(snap => {
+    snap.forEach(d => {
+      if (!d.data().read) FB.updateDoc(d.ref, { read: true }).catch(()=>{});
+    });
+  }).catch(()=>{});
 }
 function closeNotif() { document.getElementById('notifPanel').classList.remove('on'); }
 
@@ -2468,116 +2414,6 @@ function quickJoin(code) {
   joinByCode();
 }
 
-// ══ SUBSCRIPTION SYSTEM ══
-// Spotify Client ID — register at developer.spotify.com
-const SPOTIFY_CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID';
-const SPOTIFY_REDIRECT   = window.location.origin + '/';
-const SPOTIFY_SCOPES     = 'user-read-private playlist-modify-public playlist-modify-private playlist-read-private user-library-read';
-
-function checkSubscription(action) {
-  // Check if user has active sub in Firestore
-  return FB.getDoc(FB.doc(FB.db, 'subscriptions', G.user.uid)).then(snap => {
-    if (snap.exists() && snap.data().active && snap.data().expiry?.toDate() > new Date()) {
-      action();
-    } else {
-      showSubWall();
-    }
-  }).catch(() => showSubWall());
-}
-
-function showSubWall() {
-  // Generate a unique ref code for this user
-  document.getElementById('payRefCode').textContent = G.user.uid.slice(0,8).toUpperCase();
-  document.getElementById('subWall').classList.add('on');
-  haptic('medium');
-}
-
-let selectedPayMethod = '';
-function selectPay(method, el) {
-  document.querySelectorAll('.pay-opt').forEach(o => o.classList.remove('on'));
-  el.classList.add('on');
-  selectedPayMethod = method;
-  const refInput = document.getElementById('payRef');
-  const qr = document.getElementById('payQR');
-  const btn = document.getElementById('payBtn');
-  if (method === 'snapscan') {
-    qr.style.display = 'block';
-    refInput.classList.add('on');
-    refInput.placeholder = 'Enter SnapScan payment reference...';
-  } else if (method === 'payfast') {
-    qr.style.display = 'none';
-    refInput.classList.add('on');
-    refInput.placeholder = 'Enter PayFast payment reference / email...';
-  } else if (method === 'ozow') {
-    qr.style.display = 'none';
-    refInput.classList.add('on');
-    refInput.placeholder = 'Enter Ozow reference number...';
-  }
-  btn.disabled = false;
-  btn.innerHTML = `<i class="fa fa-lock"></i> Pay R20 via ${method.charAt(0).toUpperCase()+method.slice(1)}`;
-  haptic('light');
-}
-
-async function processPayment() {
-  const ref = document.getElementById('payRef').value.trim();
-  if (!ref) { toast('Please enter your payment reference!', 'err'); return; }
-  const btn = document.getElementById('payBtn');
-  btn.disabled = true;
-  btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Verifying payment...`;
-
-  // In production: verify with payment gateway API via Cloud Function
-  // Here we simulate verification then store subscription
-  showLoad();
-  await new Promise(r => setTimeout(r, 1800)); // simulate API call
-
-  try {
-    const expiry = new Date();
-    expiry.setMonth(expiry.getMonth() + 1);
-    await FB.setDoc(FB.doc(FB.db, 'subscriptions', G.user.uid), {
-      userId: G.user.uid,
-      active: true,
-      plan: 'pro',
-      amount: 20,
-      currency: 'ZAR',
-      paymentMethod: selectedPayMethod,
-      paymentRef: ref,
-      startDate: FB.serverTimestamp(),
-      expiry: FB.Timestamp.fromDate(expiry),
-      autoRenew: true
-    });
-    hideLoad();
-    document.getElementById('subWall').classList.remove('on');
-    confetti(); soundJoin();
-    toast('🎉 BASH Pro activated! You can now create parties!', 'ok');
-    // Now open create modal
-    openModal('createModal');
-  } catch(e) {
-    hideLoad();
-    btn.disabled = false;
-    btn.innerHTML = `<i class="fa fa-lock"></i> Pay R20 via ${selectedPayMethod}`;
-    toast('Payment verification failed. Please try again.', 'err');
-  }
-}
-
-// Override createParty to check subscription first
-const _origCreateParty = createParty;
-async function createPartyWithSubCheck() {
-  try {
-    const snap = await FB.getDoc(FB.doc(FB.db, 'subscriptions', G.user.uid));
-    if (snap.exists() && snap.data().active && snap.data().expiry?.toDate() > new Date()) {
-      _origCreateParty();
-    } else {
-      closeModal('createModal');
-      showSubWall();
-    }
-  } catch(e) {
-    closeModal('createModal');
-    showSubWall();
-  }
-}
-
-// Patch create button call
-window.createParty = createPartyWithSubCheck;
 
 // ══ EDIT PARTY ══
 let editEmoji = '🎉', editColor = 'linear-gradient(135deg,#7C3AED,#EC4899)';
