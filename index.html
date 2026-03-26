@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -15,13 +14,11 @@
 <link rel="icon" href="icons/icon-96.png">
 
 <!-- Fonts -->
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <!-- Firebase (module) -->
-
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,updateProfile,updateEmail,updatePassword}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -596,12 +593,10 @@ textarea.input{resize:vertical;min-height:72px}
 .edit-fab.on{display:flex}
 .edit-fab:hover{transform:scale(1.1)}
 </style>
-
 </head>
 <body>
 
 <!-- LOADING OVERLAY -->
-
 <div id="loading" style="display:none;position:fixed;inset:0;background:rgba(245,240,255,.85);backdrop-filter:blur(8px);z-index:9900;align-items:center;justify-content:center;flex-direction:column;gap:14px">
   <div class="spin"></div>
   <div style="color:var(--txt2);font-size:.85rem;font-weight:600">Loading... 🎉</div>
@@ -653,7 +648,6 @@ textarea.input{resize:vertical;min-height:72px}
 </div>
 
 <!-- SPOTIFY MODAL -->
-
 <div class="modal-ov" id="spotifyModal">
   <div class="modal" style="max-width:560px">
     <div class="modal-h">
@@ -680,7 +674,6 @@ textarea.input{resize:vertical;min-height:72px}
 </div>
 
 <!-- EDIT FAB (shown on party detail for organiser) -->
-
 <button class="edit-fab" id="editFab" onclick="openEditPartyModal()" title="Edit Party">
   <i class="fa fa-pen"></i>
 </button>
@@ -688,14 +681,12 @@ textarea.input{resize:vertical;min-height:72px}
 <div id="toasts"></div>
 
 <!-- NOTIF PANEL -->
-
 <div class="notif-panel" id="notifPanel">
   <div class="np-hdr"><h3>🔔 Notifications</h3><button class="modal-x" onclick="closeNotif()"><i class="fa fa-times"></i></button></div>
   <div class="notif-list" id="notifList"><div class="empty"><div class="ei">🔕</div><p>No notifications yet</p></div></div>
 </div>
 
 <!-- AUTH -->
-
 <div id="auth">
   <div class="auth-card">
     <div class="auth-logo"><div class="logo-big">BASH</div><div class="logo-sub">🎉 Party Planning for the Squad</div></div>
@@ -720,7 +711,6 @@ textarea.input{resize:vertical;min-height:72px}
 </div>
 
 <!-- APP -->
-
 <div id="app">
   <button class="mob-btn" onclick="toggleSB()"><i class="fa fa-bars"></i></button>
 
@@ -748,186 +738,182 @@ textarea.input{resize:vertical;min-height:72px}
 
   <div class="main">
 
-```
-<!-- DASHBOARD -->
-<div class="sec on" id="sec-dashboard">
-  <div class="ph"><h1>Hey <span id="greetName">there</span>! 👋</h1><button class="btn btn-g" onclick="openModal('createModal')"><i class="fa fa-plus"></i> New Party</button></div>
-  <div class="stats">
-    <div class="sc s1" onclick="goTo('my-parties')"><div class="sc-ico"><i class="fa fa-calendar-check"></i></div><div class="sc-num" id="stTotal">0</div><div class="sc-lbl">Total Parties</div></div>
-    <div class="sc s2"><div class="sc-ico"><i class="fa fa-clock"></i></div><div class="sc-num" id="stUp">0</div><div class="sc-lbl">Coming Up</div></div>
-    <div class="sc s3"><div class="sc-ico"><i class="fa fa-crown"></i></div><div class="sc-num" id="stOrg">0</div><div class="sc-lbl">Organising</div></div>
-    <div class="sc s4"><div class="sc-ico"><i class="fa fa-users"></i></div><div class="sc-num" id="stFriends">0</div><div class="sc-lbl">Squad Members</div></div>
-  </div>
-  <div class="ph" style="margin-bottom:14px"><h2 style="font-size:1.15rem">Upcoming Parties 🔥</h2></div>
-  <div id="rulesWarning" style="display:none;background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.3);border-radius:var(--rsm);padding:14px 16px;margin-bottom:16px;font-size:.84rem">
-    <strong>⚠️ Firestore Rules blocking access!</strong><br>
-    Go to <strong>Firebase Console → Firestore → Rules</strong> and paste these rules, then click Publish:
-    <pre style="background:rgba(0,0,0,.06);border-radius:6px;padding:10px;margin-top:8px;font-size:.72rem;overflow-x:auto;white-space:pre-wrap">rules_version = '2';
-```
-
+    <!-- DASHBOARD -->
+    <div class="sec on" id="sec-dashboard">
+      <div class="ph"><h1>Hey <span id="greetName">there</span>! 👋</h1><button class="btn btn-g" onclick="openModal('createModal')"><i class="fa fa-plus"></i> New Party</button></div>
+      <div class="stats">
+        <div class="sc s1" onclick="goTo('my-parties')"><div class="sc-ico"><i class="fa fa-calendar-check"></i></div><div class="sc-num" id="stTotal">0</div><div class="sc-lbl">Total Parties</div></div>
+        <div class="sc s2"><div class="sc-ico"><i class="fa fa-clock"></i></div><div class="sc-num" id="stUp">0</div><div class="sc-lbl">Coming Up</div></div>
+        <div class="sc s3"><div class="sc-ico"><i class="fa fa-crown"></i></div><div class="sc-num" id="stOrg">0</div><div class="sc-lbl">Organising</div></div>
+        <div class="sc s4"><div class="sc-ico"><i class="fa fa-users"></i></div><div class="sc-num" id="stFriends">0</div><div class="sc-lbl">Squad Members</div></div>
+      </div>
+      <div class="ph" style="margin-bottom:14px"><h2 style="font-size:1.15rem">Upcoming Parties 🔥</h2></div>
+      <div id="rulesWarning" style="display:none;background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.3);border-radius:var(--rsm);padding:14px 16px;margin-bottom:16px;font-size:.84rem">
+        <strong>⚠️ Firestore Rules blocking access!</strong><br>
+        Go to <strong>Firebase Console → Firestore → Rules</strong> and paste these rules, then click Publish:
+        <pre style="background:rgba(0,0,0,.06);border-radius:6px;padding:10px;margin-top:8px;font-size:.72rem;overflow-x:auto;white-space:pre-wrap">rules_version = '2';
 service cloud.firestore {
-match /databases/{database}/documents {
-match /{document=**} {
-allow read, write: if request.auth != null;
-}
-}
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
 }</pre>
-<button onclick="document.getElementById('rulesWarning').style.display='none';loadParties()" style="margin-top:10px;padding:7px 14px;background:var(--v1);border:none;border-radius:8px;color:white;font-weight:700;cursor:pointer;font-size:.8rem">Retry after fixing rules</button>
-</div>
-<div class="pgrid" id="dashGrid"><div class="empty"><div class="ei">🥲</div><h3>No parties yet!</h3><p>Create or join one to get started</p><button class="btn btn-g" onclick="openModal('createModal')">Create Party 🎉</button></div></div>
-</div>
-
-```
-<!-- MY PARTIES -->
-<div class="sec" id="sec-my-parties">
-  <div class="ph"><h1>My <span>Parties</span> 🎉</h1><button class="btn btn-g" onclick="openModal('createModal')"><i class="fa fa-plus"></i> Create New</button></div>
-  <div class="pgrid" id="myGrid"><div class="empty"><div class="ei">😴</div><h3>No parties yet!</h3><p>Time to make something happen!</p><button class="btn btn-g" onclick="openModal('createModal')">Let's Goooo 🚀</button></div></div>
-</div>
-
-<!-- DISCOVER -->
-<div class="sec" id="sec-discover">
-  <div class="ph"><h1>Discover <span>Vibes</span> 🌊</h1></div>
-  <div id="hypeFeed"><div class="empty"><div class="ei">🌐</div><h3>Nothing yet!</h3><p>Public parties show up here</p></div></div>
-</div>
-
-<!-- JOIN -->
-<div class="sec" id="sec-join">
-  <div class="ph"><h1>Join a <span>Party</span> 🎫</h1></div>
-  <div style="max-width:420px">
-    <div class="join-big">
-      <div class="ji">🎟️</div>
-      <h2 style="font-size:1.3rem;margin-bottom:6px">Got an invite code?</h2>
-      <p style="font-size:.84rem;color:var(--txt2);margin-bottom:0">Enter the 6-character code from your organiser</p>
-      <input type="text" class="join-code-input" id="joinCode" placeholder="BASH42" maxlength="10">
-      <button class="btn btn-g" style="width:100%" onclick="joinByCode()"><i class="fa fa-ticket"></i> Join the Party! 🎉</button>
+        <button onclick="document.getElementById('rulesWarning').style.display='none';loadParties()" style="margin-top:10px;padding:7px 14px;background:var(--v1);border:none;border-radius:8px;color:white;font-weight:700;cursor:pointer;font-size:.8rem">Retry after fixing rules</button>
+      </div>
+      <div class="pgrid" id="dashGrid"><div class="empty"><div class="ei">🥲</div><h3>No parties yet!</h3><p>Create or join one to get started</p><button class="btn btn-g" onclick="openModal('createModal')">Create Party 🎉</button></div></div>
     </div>
-  </div>
-</div>
 
-<!-- PROFILE -->
-<div class="sec" id="sec-profile">
-  <div class="ph"><h1>My <span>Profile</span> ✨</h1><button class="btn btn-g btn-s" onclick="openModal('editProfileModal')"><i class="fa fa-edit"></i> Edit</button></div>
-  <div class="profile-wrap" id="profileWrap">
-    <div class="empty"><div class="ei">👤</div><p>Loading profile...</p></div>
-  </div>
-</div>
-
-<!-- PARTY DETAIL -->
-<div class="sec" id="sec-party">
-  <div class="ph">
-    <button class="btn btn-o btn-s" onclick="goBack()"><i class="fa fa-arrow-left"></i> Back</button>
-    <div style="display:flex;gap:7px;flex-wrap:wrap">
-      <button class="btn btn-o btn-s" onclick="shareParty()"><i class="fa fa-share-alt"></i> Share</button>
-      <button class="btn btn-g btn-s" onclick="openModal('inviteModal')"><i class="fa fa-user-plus"></i> Invite</button>
+    <!-- MY PARTIES -->
+    <div class="sec" id="sec-my-parties">
+      <div class="ph"><h1>My <span>Parties</span> 🎉</h1><button class="btn btn-g" onclick="openModal('createModal')"><i class="fa fa-plus"></i> Create New</button></div>
+      <div class="pgrid" id="myGrid"><div class="empty"><div class="ei">😴</div><h3>No parties yet!</h3><p>Time to make something happen!</p><button class="btn btn-g" onclick="openModal('createModal')">Let's Goooo 🚀</button></div></div>
     </div>
-  </div>
 
-  <div class="pd-hdr" id="pdHdr">
-    <div class="pd-emoji" id="pdEmoji">🎉</div>
-    <div class="pd-content">
-      <h1 id="pdTitle">Party</h1>
-      <div class="meta-chips" id="pdChips"></div>
+    <!-- DISCOVER -->
+    <div class="sec" id="sec-discover">
+      <div class="ph"><h1>Discover <span>Vibes</span> 🌊</h1></div>
+      <div id="hypeFeed"><div class="empty"><div class="ei">🌐</div><h3>Nothing yet!</h3><p>Public parties show up here</p></div></div>
     </div>
-  </div>
 
-  <div class="cd" id="pdCd"></div>
-
-  <div class="tabs" id="partyTabs">
-    <button class="tab on" onclick="partyTab('overview',this)"><i class="fa fa-home"></i> Overview</button>
-    <button class="tab" onclick="partyTab('dashboard',this)"><i class="fa fa-chart-bar"></i> Dashboard</button>
-    <button class="tab" onclick="partyTab('tasks',this)"><i class="fa fa-check-square"></i> Tasks</button>
-    <button class="tab" onclick="partyTab('schedule',this)"><i class="fa fa-calendar"></i> Schedule</button>
-    <button class="tab" onclick="partyTab('chat',this)"><i class="fa fa-comments"></i> Chat</button>
-    <button class="tab" onclick="partyTab('photos',this)"><i class="fa fa-images"></i> Photos</button>
-    <button class="tab" onclick="partyTab('squad',this)"><i class="fa fa-users"></i> Squad</button>
-    <button class="tab" onclick="partyTab('spotify',this)">🎵 Playlist</button>
-  </div>
-
-  <div id="pt-overview" class="pt"><div class="log-grid" id="logGrid"></div></div>
-
-  <div id="pt-dashboard" class="pt" style="display:none">
-    <div id="biContent"></div>
-  </div>
-
-  <div id="pt-tasks" class="pt" style="display:none">
-    <div class="ph" style="margin-bottom:13px">
-      <div><h3 style="font-size:1rem">Who Brings What 🛒</h3><p style="font-size:.75rem;color:var(--txt3);margin-top:2px">Leave unassigned so squad can claim tasks</p></div>
-      <button class="btn btn-g btn-s" id="btnAddTask" onclick="openModal('taskModal')"><i class="fa fa-plus"></i> Add Task</button>
-    </div>
-    <div class="task-list" id="taskList"></div>
-  </div>
-
-  <div id="pt-schedule" class="pt" style="display:none">
-    <div class="ph" style="margin-bottom:13px">
-      <h3 style="font-size:1rem">Party Schedule 📋</h3>
-      <button class="btn btn-g btn-s" id="btnAddAct" onclick="openModal('actModal')"><i class="fa fa-plus"></i> Add Activity</button>
-    </div>
-    <div class="act-tl" id="actTl"></div>
-  </div>
-
-  <div id="pt-chat" class="pt" style="display:none">
-    <div class="chat-wrap">
-      <div class="chat-msgs" id="chatMsgs"><div style="text-align:center;color:var(--txt3);font-size:.78rem;padding:16px"><span class="live"></span>Live chat — say hi!</div></div>
-      <div class="chat-in">
-        <div class="sticker-row" id="stickerRow">
-          <span class="stkr" onclick="sendSticker('🔥')">🔥</span><span class="stkr" onclick="sendSticker('💀')">💀</span><span class="stkr" onclick="sendSticker('🎉')">🎉</span><span class="stkr" onclick="sendSticker('😭')">😭</span><span class="stkr" onclick="sendSticker('💯')">💯</span><span class="stkr" onclick="sendSticker('🤙')">🤙</span><span class="stkr" onclick="sendSticker('👀')">👀</span><span class="stkr" onclick="sendSticker('😤')">😤</span><span class="stkr" onclick="sendSticker('🥳')">🥳</span><span class="stkr" onclick="sendSticker('💃')">💃</span><span class="stkr" onclick="sendSticker('🕺')">🕺</span><span class="stkr" onclick="sendSticker('🚀')">🚀</span><span class="stkr" onclick="sendSticker('✨')">✨</span><span class="stkr" onclick="sendSticker('🫡')">🫡</span><span class="stkr" onclick="sendSticker('😂')">😂</span>
-        </div>
-        <div class="gif-picker" id="gifPicker">
-          <input class="gif-search" id="gifQ" placeholder="Search GIFs..." oninput="searchGifs(this.value)">
-          <div class="gif-grid" id="gifGrid"></div>
-        </div>
-        <div class="chat-tools">
-          <button class="ctbtn" onclick="toggleStickers()"><i class="fa fa-smile"></i> Stickers</button>
-          <button class="ctbtn" onclick="toggleGif()"><i class="fa fa-film"></i> GIF</button>
-        </div>
-        <div class="chat-row">
-          <input type="text" class="chat-field" id="chatIn" placeholder="Say something... 💬" onkeydown="if(event.key==='Enter')sendMsg()">
-          <button class="chat-send" onclick="sendMsg()"><i class="fa fa-paper-plane"></i></button>
+    <!-- JOIN -->
+    <div class="sec" id="sec-join">
+      <div class="ph"><h1>Join a <span>Party</span> 🎫</h1></div>
+      <div style="max-width:420px">
+        <div class="join-big">
+          <div class="ji">🎟️</div>
+          <h2 style="font-size:1.3rem;margin-bottom:6px">Got an invite code?</h2>
+          <p style="font-size:.84rem;color:var(--txt2);margin-bottom:0">Enter the 6-character code from your organiser</p>
+          <input type="text" class="join-code-input" id="joinCode" placeholder="BASH42" maxlength="10">
+          <button class="btn btn-g" style="width:100%" onclick="joinByCode()"><i class="fa fa-ticket"></i> Join the Party! 🎉</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <div id="pt-photos" class="pt" style="display:none">
-    <div class="ph" style="margin-bottom:13px">
-      <h3 style="font-size:1rem">Memories 📸</h3>
-      <button class="btn btn-g btn-s" onclick="openModal('photoModal')"><i class="fa fa-upload"></i> Upload</button>
-    </div>
-    <div class="photo-grid" id="photoGrid"></div>
-  </div>
-
-  <div id="pt-squad" class="pt" style="display:none">
-      <h3 style="font-size:1rem">The Squad 👥</h3>
-      <div style="font-size:.76rem;color:var(--txt3)" id="squadCount"></div>
-    </div>
-    <div class="att-list" id="attList"></div>
-    <div style="margin-top:20px">
-      <div class="invite-card">
-        <div class="inv-lbl">Party Invite Code</div>
-        <div class="inv-code" id="invCode">------</div>
-        <p style="font-size:.78rem;color:var(--txt2);margin-bottom:12px">Share this with your squad to let them join</p>
-        <button class="btn btn-g btn-s" onclick="copyCode()"><i class="fa fa-copy"></i> Copy Code</button>
+    <!-- PROFILE -->
+    <div class="sec" id="sec-profile">
+      <div class="ph"><h1>My <span>Profile</span> ✨</h1><button class="btn btn-g btn-s" onclick="openModal('editProfileModal')"><i class="fa fa-edit"></i> Edit</button></div>
+      <div class="profile-wrap" id="profileWrap">
+        <div class="empty"><div class="ei">👤</div><p>Loading profile...</p></div>
       </div>
     </div>
-  </div>
-  <!-- SPOTIFY TAB -->
-  <div id="pt-spotify" class="pt" style="display:none">
-    <div class="sp-card">
-      <div id="spTabContent">
-        <!-- Rendered by renderSpotifyTab() -->
-        <div style="text-align:center;padding:24px 16px">
-          <div style="font-size:3rem;margin-bottom:12px">🎵</div>
-          <h3 style="color:white;margin-bottom:8px">Party Playlist</h3>
-          <p style="color:#b3b3b3;font-size:.82rem;margin-bottom:18px">Build the ultimate party soundtrack together!</p>
-          <button class="sp-connect-btn" onclick="renderSpotifyTab()">
-            <span>🎵</span> Open Playlist
-          </button>
+
+    <!-- PARTY DETAIL -->
+    <div class="sec" id="sec-party">
+      <div class="ph">
+        <button class="btn btn-o btn-s" onclick="goBack()"><i class="fa fa-arrow-left"></i> Back</button>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn btn-o btn-s" onclick="shareParty()"><i class="fa fa-share-alt"></i> Share</button>
+          <button class="btn btn-g btn-s" onclick="openModal('inviteModal')"><i class="fa fa-user-plus"></i> Invite</button>
+        </div>
+      </div>
+
+      <div class="pd-hdr" id="pdHdr">
+        <div class="pd-emoji" id="pdEmoji">🎉</div>
+        <div class="pd-content">
+          <h1 id="pdTitle">Party</h1>
+          <div class="meta-chips" id="pdChips"></div>
+        </div>
+      </div>
+
+      <div class="cd" id="pdCd"></div>
+
+      <div class="tabs" id="partyTabs">
+        <button class="tab on" onclick="partyTab('overview',this)"><i class="fa fa-home"></i> Overview</button>
+        <button class="tab" onclick="partyTab('dashboard',this)"><i class="fa fa-chart-bar"></i> Dashboard</button>
+        <button class="tab" onclick="partyTab('tasks',this)"><i class="fa fa-check-square"></i> Tasks</button>
+        <button class="tab" onclick="partyTab('schedule',this)"><i class="fa fa-calendar"></i> Schedule</button>
+        <button class="tab" onclick="partyTab('chat',this)"><i class="fa fa-comments"></i> Chat</button>
+        <button class="tab" onclick="partyTab('photos',this)"><i class="fa fa-images"></i> Photos</button>
+        <button class="tab" onclick="partyTab('squad',this)"><i class="fa fa-users"></i> Squad</button>
+        <button class="tab" onclick="partyTab('spotify',this)">🎵 Playlist</button>
+      </div>
+
+      <div id="pt-overview" class="pt"><div class="log-grid" id="logGrid"></div></div>
+
+      <div id="pt-dashboard" class="pt" style="display:none">
+        <div id="biContent"></div>
+      </div>
+
+      <div id="pt-tasks" class="pt" style="display:none">
+        <div class="ph" style="margin-bottom:13px">
+          <div><h3 style="font-size:1rem">Who Brings What 🛒</h3><p style="font-size:.75rem;color:var(--txt3);margin-top:2px">Leave unassigned so squad can claim tasks</p></div>
+          <button class="btn btn-g btn-s" id="btnAddTask" onclick="openModal('taskModal')"><i class="fa fa-plus"></i> Add Task</button>
+        </div>
+        <div class="task-list" id="taskList"></div>
+      </div>
+
+      <div id="pt-schedule" class="pt" style="display:none">
+        <div class="ph" style="margin-bottom:13px">
+          <h3 style="font-size:1rem">Party Schedule 📋</h3>
+          <button class="btn btn-g btn-s" id="btnAddAct" onclick="openModal('actModal')"><i class="fa fa-plus"></i> Add Activity</button>
+        </div>
+        <div class="act-tl" id="actTl"></div>
+      </div>
+
+      <div id="pt-chat" class="pt" style="display:none">
+        <div class="chat-wrap">
+          <div class="chat-msgs" id="chatMsgs"><div style="text-align:center;color:var(--txt3);font-size:.78rem;padding:16px"><span class="live"></span>Live chat — say hi!</div></div>
+          <div class="chat-in">
+            <div class="sticker-row" id="stickerRow">
+              <span class="stkr" onclick="sendSticker('🔥')">🔥</span><span class="stkr" onclick="sendSticker('💀')">💀</span><span class="stkr" onclick="sendSticker('🎉')">🎉</span><span class="stkr" onclick="sendSticker('😭')">😭</span><span class="stkr" onclick="sendSticker('💯')">💯</span><span class="stkr" onclick="sendSticker('🤙')">🤙</span><span class="stkr" onclick="sendSticker('👀')">👀</span><span class="stkr" onclick="sendSticker('😤')">😤</span><span class="stkr" onclick="sendSticker('🥳')">🥳</span><span class="stkr" onclick="sendSticker('💃')">💃</span><span class="stkr" onclick="sendSticker('🕺')">🕺</span><span class="stkr" onclick="sendSticker('🚀')">🚀</span><span class="stkr" onclick="sendSticker('✨')">✨</span><span class="stkr" onclick="sendSticker('🫡')">🫡</span><span class="stkr" onclick="sendSticker('😂')">😂</span>
+            </div>
+            <div class="gif-picker" id="gifPicker">
+              <input class="gif-search" id="gifQ" placeholder="Search GIFs..." oninput="searchGifs(this.value)">
+              <div class="gif-grid" id="gifGrid"></div>
+            </div>
+            <div class="chat-tools">
+              <button class="ctbtn" onclick="toggleStickers()"><i class="fa fa-smile"></i> Stickers</button>
+              <button class="ctbtn" onclick="toggleGif()"><i class="fa fa-film"></i> GIF</button>
+            </div>
+            <div class="chat-row">
+              <input type="text" class="chat-field" id="chatIn" placeholder="Say something... 💬" onkeydown="if(event.key==='Enter')sendMsg()">
+              <button class="chat-send" onclick="sendMsg()"><i class="fa fa-paper-plane"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="pt-photos" class="pt" style="display:none">
+        <div class="ph" style="margin-bottom:13px">
+          <h3 style="font-size:1rem">Memories 📸</h3>
+          <button class="btn btn-g btn-s" onclick="openModal('photoModal')"><i class="fa fa-upload"></i> Upload</button>
+        </div>
+        <div class="photo-grid" id="photoGrid"></div>
+      </div>
+
+      <div id="pt-squad" class="pt" style="display:none">
+        <div class="ph" style="margin-bottom:13px">
+          <h3 style="font-size:1rem">The Squad 👥</h3>
+          <div style="font-size:.76rem;color:var(--txt3)" id="squadCount"></div>
+        </div>
+        <div class="att-list" id="attList"></div>
+        <div style="margin-top:20px">
+          <div class="invite-card">
+            <div class="inv-lbl">Party Invite Code</div>
+            <div class="inv-code" id="invCode">------</div>
+            <p style="font-size:.78rem;color:var(--txt2);margin-bottom:12px">Share this with your squad to let them join</p>
+            <button class="btn btn-g btn-s" onclick="copyCode()"><i class="fa fa-copy"></i> Copy Code</button>
+          </div>
+        </div>
+      </div>
+      <!-- SPOTIFY TAB -->
+      <div id="pt-spotify" class="pt" style="display:none">
+        <div class="sp-card">
+          <div id="spTabContent">
+            <!-- Rendered by renderSpotifyTab() -->
+            <div style="text-align:center;padding:24px 16px">
+              <div style="font-size:3rem;margin-bottom:12px">🎵</div>
+              <h3 style="color:white;margin-bottom:8px">Party Playlist</h3>
+              <p style="color:#b3b3b3;font-size:.82rem;margin-bottom:18px">Build the ultimate party soundtrack together!</p>
+              <button class="sp-connect-btn" onclick="renderSpotifyTab()">
+                <span>🎵</span> Open Playlist
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-```
 
   </div><!-- /main -->
 </div><!-- /app -->
@@ -935,7 +921,6 @@ allow read, write: if request.auth != null;
 <!-- ════ MODALS ════ -->
 
 <!-- CREATE PARTY -->
-
 <div class="modal-ov" id="createModal">
   <div class="modal" style="max-width:600px">
     <div class="modal-h"><h2>Create a Party 🎊</h2><button class="modal-x" onclick="closeModal('createModal')"><i class="fa fa-times"></i></button></div>
@@ -980,7 +965,6 @@ allow read, write: if request.auth != null;
 </div>
 
 <!-- INVITE -->
-
 <div class="modal-ov" id="inviteModal">
   <div class="modal">
     <div class="modal-h"><h2>Invite People 🎫</h2><button class="modal-x" onclick="closeModal('inviteModal')"><i class="fa fa-times"></i></button></div>
@@ -999,7 +983,6 @@ allow read, write: if request.auth != null;
 </div>
 
 <!-- ADD TASK -->
-
 <div class="modal-ov" id="taskModal">
   <div class="modal">
     <div class="modal-h"><h2>Add Task 📝</h2><button class="modal-x" onclick="closeModal('taskModal')"><i class="fa fa-times"></i></button></div>
@@ -1028,7 +1011,6 @@ allow read, write: if request.auth != null;
 </div>
 
 <!-- ADD ACTIVITY -->
-
 <div class="modal-ov" id="actModal">
   <div class="modal">
     <div class="modal-h"><h2>Add Activity 📋</h2><button class="modal-x" onclick="closeModal('actModal')"><i class="fa fa-times"></i></button></div>
@@ -1048,7 +1030,6 @@ allow read, write: if request.auth != null;
 </div>
 
 <!-- UPLOAD PHOTO -->
-
 <div class="modal-ov" id="photoModal">
   <div class="modal">
     <div class="modal-h"><h2>Upload Memories 📸</h2><button class="modal-x" onclick="closeModal('photoModal')"><i class="fa fa-times"></i></button></div>
@@ -1079,7 +1060,6 @@ allow read, write: if request.auth != null;
 </div>
 
 <!-- EDIT PROFILE -->
-
 <div class="modal-ov" id="editProfileModal">
   <div class="modal">
     <div class="modal-h"><h2>Edit Profile ✏️</h2><button class="modal-x" onclick="closeModal('editProfileModal')"><i class="fa fa-times"></i></button></div>
@@ -1102,7 +1082,6 @@ allow read, write: if request.auth != null;
 </div>
 
 <!-- LEAVE REVIEW -->
-
 <div class="modal-ov" id="reviewModal">
   <div class="modal">
     <div class="modal-h"><h2>Rate this Party ⭐</h2><button class="modal-x" onclick="closeModal('reviewModal')"><i class="fa fa-times"></i></button></div>
@@ -1127,7 +1106,6 @@ allow read, write: if request.auth != null;
 </div>
 
 <!-- VIEW PROFILE (other users) -->
-
 <div class="modal-ov" id="viewProfileModal">
   <div class="modal" style="max-width:500px">
     <div class="modal-h"><h2 id="vpTitle">Profile</h2><button class="modal-x" onclick="closeModal('viewProfileModal')"><i class="fa fa-times"></i></button></div>
@@ -1621,10 +1599,19 @@ async function openParty(id) {
     const unsub = FB.onSnapshot(FB.doc(FB.db, 'parties', id), docSnap => {
       if (docSnap.exists()) {
         G.party = { id: docSnap.id, ...docSnap.data() };
+        // Always update task list and BI (lightweight)
         renderPartyTasks(G.party);
-        renderAttendees(G.party);
-        renderActivities(G.party);
         renderBI(G.party);
+        // Only update squad tab if it's currently visible
+        const squadTab = document.getElementById('pt-squad');
+        if (squadTab && squadTab.style.display !== 'none') {
+          renderAttendees(G.party);
+        }
+        // Update activities if schedule tab is visible
+        const schedTab = document.getElementById('pt-schedule');
+        if (schedTab && schedTab.style.display !== 'none') {
+          renderActivities(G.party);
+        }
       }
     }, err => {
       console.error('[BASH] Party listener error:', err);
@@ -1822,13 +1809,12 @@ function renderPartyTasks(p) {
     const mine = t.assigneeId === uid;
     const hasAss = !!(t.assignee || t.assigneeId);
     const canClaim = !hasAss && !t.done;
-    const isOrg = p.organiserId === uid;
-    // Can complete: assigned to me OR organiser
-    const canComplete = mine || isOrg;
-    const chkStyle = !canComplete && !t.done ? 'opacity:.4;cursor:not-allowed' : '';
-    const chkTitle = !canComplete && !t.done ? 'Only the assigned person can complete this' : '';
+    // ONLY the assigned person can complete their own task
+    const canComplete = mine;
+    const chkStyle = !canComplete && !t.done ? 'opacity:.35;cursor:not-allowed' : 'cursor:pointer';
+    const chkTitle = !canComplete && !t.done ? (hasAss ? 'Only the assigned person can complete this' : 'Claim this task first to complete it') : '';
     return `<div class="ti ${t.done?'done':''} ${canClaim?'unclaimed':''} ${mine&&!t.done?'mine':''}">
-      <div class="t-chk" onclick="toggleTask(${i})" style="${chkStyle}" title="${chkTitle}">${t.done?'<i class="fa fa-check" style="font-size:.6rem;color:white"></i>':(!canComplete?'<i class="fa fa-lock" style="font-size:.6rem;color:var(--txt3)"></i>':'')}</div>
+      <div class="t-chk" onclick="${canComplete||t.done?`toggleTask(${i})`:'void(0)'}" style="${chkStyle}" title="${chkTitle}">${t.done?'<i class="fa fa-check" style="font-size:.6rem;color:white"></i>':(!canComplete&&hasAss?'<i class="fa fa-lock" style="font-size:.6rem;color:var(--txt3)"></i>':'')}</div>
       <div class="ti-txt">${cats[t.category]||'✅'} ${esc(t.text)}</div>
       <div class="ti-r">
         ${hasAss ? `<div class="ti-ass ${mine?'me':''}">${mine?'👤 Me':'@'+esc(t.assignee||'someone')}</div>` : `<div class="ti-un">Unclaimed</div>`}
@@ -1870,16 +1856,17 @@ async function toggleTask(i) {
   const tasks = snap.data().tasks || [];
   const t = tasks[i];
   const uid = G.user.uid;
-  const isOrg = snap.data().organiserId === uid;
 
-  // Only the assigned person (or organiser) can complete a task
-  if (!t.done) {
-    const assignedToMe = t.assigneeId === uid;
-    if (!assignedToMe && !isOrg) {
-      toast('Only the person assigned to this task can complete it! 🙅', 'err');
-      haptic('error');
-      return;
-    }
+  // Only the assigned person can complete/uncomplete their task
+  if (t.assigneeId && t.assigneeId !== uid) {
+    toast('Only the person assigned to this task can complete it! 🙅', 'err');
+    haptic('error');
+    return;
+  }
+  if (!t.assigneeId && !t.done) {
+    toast('Claim this task first before completing it! ✋', 'err');
+    haptic('error');
+    return;
   }
   tasks[i].done = !tasks[i].done;
   if (tasks[i].done) tasks[i].completedAt = new Date().toISOString();
@@ -2081,6 +2068,8 @@ function partyTab(tab, btn) {
   if (tab === 'chat') { setupChat(); setTimeout(scrollChat, 200); }
   if (tab === 'photos') loadPhotos(G.partyId);
   if (tab === 'spotify') renderSpotifyTab();
+  if (tab === 'squad') { if (G.party) renderAttendees(G.party); }
+  if (tab === 'schedule') { if (G.party) renderActivities(G.party); }
 }
 
 // ══ CHAT ══
@@ -2971,9 +2960,11 @@ async function loadPartyPlaylist() {
 // ══ SERVICE WORKER ══
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/partyplanning/sw.js', { scope: '/partyplanning/' })
-      .then(reg => console.log('[BASH] SW registered, scope:', reg.scope))
-      .catch(e => console.log('[BASH] SW failed:', e));
+    // Use relative path - works for both root and subfolder deployments
+    const swPath = new URL('sw.js', window.location.href).pathname;
+    navigator.serviceWorker.register(swPath)
+      .then(reg => console.log('[BASH] SW registered'))
+      .catch(e => console.log('[BASH] SW skipped:', e.message));
   });
 }
 
@@ -3008,6 +2999,5 @@ async function installPWA() {
 
 window.addEventListener('appinstalled', () => { toast('BASH is on your home screen! 🚀', 'ok'); confetti(); });
 </script>
-
 </body>
 </html>
